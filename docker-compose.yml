@@ -1,0 +1,46 @@
+version: "3.5"
+services:
+  influx:
+    image: "influxdb:alpine"
+    restart: unless-stopped
+    # ports:
+    #   - 8086:8086
+    #   - 8088:8088
+    environment:
+      TZ: Europe/Moscow
+    volumes:
+      - influx-data:/var/lib/influxdb:rw
+
+  grafana:
+    build:
+      context: ./grafana
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - influx
+    ports:
+      - 3000:3000
+    environment:
+      TZ: Europe/Moscow
+    # GF_PATHS_DATA='/var/lib/grafana' is not writable.
+    # volumes:
+    #   - /var/docker/Data/grafana:/var/lib/grafana:rw
+
+  telegraf:
+    # https://hub.docker.com/_/telegraf
+    image: "telegraf:alpine"
+    restart: unless-stopped
+    environment:
+      HOST_PROC: /rootfs/proc
+      HOST_SYS: /rootfs/sys
+      HOST_ETC: /rootfs/etc
+      TZ: Europe/Moscow
+    hostname: flops.smirart.ru
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf
+      - /var/run/docker.sock:/var/run/docker.sock
+      - telegraf-logs:/var/logs:rw
+
+volumes:
+  influx-data
+  telegraf-logs
