@@ -31,15 +31,21 @@ services:
     image: "telegraf:alpine"
     restart: unless-stopped
     environment:
+      TZ: Europe/Moscow
+      HOST_ETC: /rootfs/etc
       HOST_PROC: /rootfs/proc
       HOST_SYS: /rootfs/sys
-      HOST_ETC: /rootfs/etc
-      TZ: Europe/Moscow
+      HOST_VAR: /rootfs/var
+      HOST_RUN: /hostfs/run
+      HOST_MOUNT_PREFIX: /hostfs
+    extra_hosts:
+      - "influxdb:influx"
     hostname: localhost
     volumes:
-      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - telegraf-logs:/var/logs:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
 
 volumes:
   influx-data:
